@@ -2,19 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lead } from '@/types/db/lead';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-
-async function fetchLeads(): Promise<Lead[]> {
-    const response = await fetch(`/api/db/leads/fetch-all-leads`, {
-        cache: 'no-store',
-    });
-    const data = await response.json();
-
-    if (data.success) {
-        return data.leads;
-    } else {
-        throw new Error(data.message || 'Failed to fetch leads');
-    }
-}
+import { fetchLeads } from './lib/fetchLeads';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatStatus, getStatusBadgeVariant } from './utils/dashboard-helper';
+import { Badge } from '@/components/ui/badge';
+import { PhoneNumbersModal } from './_components/PhoneNumbersModal';
+import { DateTimeModal } from './_components/DateTimeModal';
+import { NotesModal } from './_components/NotesModal';
+import { FollowUpDateModal } from './_components/FollowUpDateModal';
+import { LastContactedModal } from './_components/LastContactedModal';
 
 export default async function DashboardPage() {
     let leads: Lead[] = [];
@@ -42,15 +38,52 @@ export default async function DashboardPage() {
                         </Link>
                     </div>
                     {error && <p className="text-red-500">{error}</p>}
-                    <ul>
-                        {leads.map((lead) => (
-                            <li key={lead.id} className="mb-4">
-                                <p><strong>Organization:</strong> {lead.orgName}</p>
-                                <p><strong>Status:</strong> {lead.status}</p>
-                                <p><strong>Phone:</strong> {lead.phoneNumbers?.join(', ') || 'N/A'}</p>
-                            </li>
-                        ))}
-                    </ul>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Organization</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Phone Numbers</TableHead>
+                                <TableHead>Notes</TableHead>
+                                <TableHead>Follow-Up Date</TableHead>
+                                <TableHead>Last Contacted</TableHead>
+                                <TableHead>Assigned To</TableHead>
+                                <TableHead>Created At</TableHead>
+                                <TableHead>Updated At</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {leads.map((lead) => (
+                                <TableRow key={lead.id}>
+                                    <TableCell>{lead.orgName}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={getStatusBadgeVariant(lead.status)}>
+                                            {formatStatus(lead.status)}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <PhoneNumbersModal phoneNumbers={lead.phoneNumbers} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <NotesModal initialNotes={lead.notes} id={lead.id} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <FollowUpDateModal id={lead.id} initialDate={lead.followUpDate} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <LastContactedModal id={lead.id} initialDate={lead.lastContactedAt} />
+                                    </TableCell>
+                                    <TableCell>{lead.assignedTo || 'N/A'}</TableCell>
+                                    <TableCell>
+                                        <DateTimeModal label="Created At" isoString={lead.createdAt} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <DateTimeModal label="Updated At" isoString={lead.updatedAt} />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

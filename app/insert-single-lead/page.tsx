@@ -24,7 +24,7 @@ export default function AddLeadPage() {
     };
 
     try {
-      const response = await fetch('/api/db/leads/insert-leads/single', {
+      const response = await fetch('/api/db/leads/insert/single', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

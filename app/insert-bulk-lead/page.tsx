@@ -15,7 +15,7 @@ export default function InsertBulkLeadPage() {
         try {
             const leads: Lead[] = JSON.parse(jsonInput);
 
-            const response = await fetch('/api/db/leads/insert-leads/bulk', {
+            const response = await fetch('/api/db/leads/insert/bulk', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

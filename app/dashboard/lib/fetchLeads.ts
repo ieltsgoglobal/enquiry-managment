@@ -1,7 +1,8 @@
+import { getBaseUrl } from '@/lib/api-base';
 import { Lead } from '@/types/db/lead';
 
 export async function fetchLeads(): Promise<Lead[]> {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = getBaseUrl();
 
     const response = await fetch(`${baseUrl}/api/db/leads/fetch`, {
         cache: 'no-store',

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { DB_URL } from "@/lib/json-server/onrender/get_db_url";
 
-const USERS_API_URL = "https://json-server-mivt.onrender.com/users"
+const USERS_API_URL = `${DB_URL}/users`
 
 export async function POST(request: Request) {
     try {

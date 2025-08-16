@@ -1,0 +1,305 @@
+---
+title: "Lead Caller – Product Requirements Document (PRD)"
+version: "1.0"
+owner: "Auralytix / IeltsGoGlobal"
+last_updated: "16 August 2025"
+---
+
+# Lead Caller – Product Requirements Document (PRD)
+
+## 1. Summary
+
+Build a lightweight sales-calling tool that lets a small team store leads, see whom to call at the right time, take notes, and stay on top of follow-ups using simple, reliable reminders. 
+
+**Tech stack**: Next.js 14 (App Router, TS, Tailwind, shadcn/ui) with JSON Server as the temporary database (local REST API).
+
+---
+
+## 2. Goals & Non-Goals
+
+### 2.1 Goals (prioritized)
+1. Add, browse, filter, and update lead records quickly (single & bulk CSV import).
+2. Schedule per-lead call reminders (days of week + local time + timezone) and compute `next_due_at` (UTC) deterministically.
+3. Daily "Whom to call" view (due/past-due leads for today) with actions: mark called, snooze, update status.
+4. Track activity and outcomes (OPEN / FOLLOW_UP / CLOSED) with simple analytics on a Success Dashboard.
+5. Durable notes field with Markdown preview.
+
+### 2.2 Non-Goals (v1)
+- True multi-tenant auth/roles, SSO, or server-side cron jobs.
+- Telephony dialer, call recording, or WhatsApp/SMS automation.
+- Complex pipeline stages beyond the three statuses.
+- Advanced permissions, audit logs, or GDPR tooling.
+
+---
+
+## 3. Personas
+
+- **Sales Rep (primary)**: Makes outbound calls daily; needs a clean list of who to call now, quick editing, snooze, and notes.
+- **Team Lead**: Imports leads, assigns owners, checks progress via KPIs (due today, follow-ups, closed).
+- **Owner/Manager**: Wants simple dashboard to see progress and ensure follow-ups happen on time.
+
+---
+
+## 4. Key Use Cases / User Stories
+
+1. As a Sales Rep, I want to see a list of leads due to call now, so I can work through them without missing anyone.
+2. As a Sales Rep, I want to snooze a lead (10/30/60 min or custom), so I can try later.
+3. As a Sales Rep, I want to update notes while calling, so I don’t forget outcomes.
+4. As a Team Lead, I want to bulk import leads from CSV, preview mapping, and commit.
+5. As a Team Lead, I want to set call schedule/timezone per lead, so reminders trigger at the right local time.
+6. As an Owner, I want a dashboard that shows KPIs: Open, Due Today, Follow-Up, Closed.
+
+---
+
+## 5. Functional Requirements
+
+### 5.1 Authentication (demo-level)
+- Login page with username/password checked against `/users` on JSON Server.
+- Store a simple session token in `localStorage`; guard private routes; logout clears it.
+- Single role for v1; later: Admin/Rep roles.
+
+### 5.2 Lead Model
+
+Each lead stores contact, scheduling, and status fields. See Data Model for schema.
+
+### 5.3 Lead CRUD
+- **Create**: Single form with validation (zod). On save, compute `next_due_at` using schedule fields.
+- **Read/List**: Table with search (`q`), filter by status, timezone, and due window; sort by `next_due_at`.
+- **Update**: Any field; recompute `next_due_at` when schedule fields change.
+- **Delete**: Confirmation dialog; single-row deletion only in v1.
+
+### 5.4 Bulk Import (CSV)
+- Upload CSV → Map columns → Preview → Commit.
+- Deduplicate by `websiteUrl` or `phoneNumber` if provided (configurable toggle in preview).
+- On commit, compute schedule fields and `next_due_at` for each row.
+
+### 5.5 Notes (Markdown)
+- Textarea with live preview (`react-markdown`; sanitize basic HTML).
+- Persist as plain string in `notes`.
+
+### 5.6 Whom to Call (Today view)
+- Default dashboard section listing leads with `status ∈ {OPEN, FOLLOW_UP}` and `next_due_at <= now`.
+- Per-row actions: Call (opens `tel:` if `phoneUrl`), Snooze (10/30/60/custom), Mark Called (updates status or pushes next occurrence), Edit.
+- "Snooze" sets `next_due_at = now + X min` in the lead’s timezone converted to UTC.
+
+### 5.7 Reminder Computation (client-side)
+- Use `rrule` + `luxon` to support weekly recurrence on chosen days and local time.
+- **Inputs**: `callDays` (array of DOW codes), `callTimeLocal` (HH:mm), `timezone` (IANA).
+- **Output**: `next_due_at` (ISO UTC). Function is pure and unit-tested (DST safe; if today’s time has passed, pick next valid occurrence).
+
+### 5.8 Notifications (best-effort)
+- In-browser Notifications API with Service Worker. Ask permission on first dashboard visit.
+- React Query polling (e.g., every 60s) to detect new due items client-side; when a new lead becomes due, show a notification.
+- **Limitation**: When browser/tab is closed, reminders won’t fire (documented in README).
+
+### 5.9 Success Dashboard
+- KPIs: Total Leads, Open, Due Today, Follow-Ups, Closed.
+- Simple trend chart (last 7 days calls/closures) using client aggregation.
+
+### 5.10 Settings (basic)
+- Default timezone (auto from browser, editable on forms).
+- Default remind-before (stored per lead; visual only in v1).
+
+---
+
+## 6. Non-Functional Requirements
+
+- **Performance**: Initial dashboard load ≤ 1.5s on a typical laptop; table virtualized for >500 leads.
+- **Reliability**: All schedule computations are deterministic; unit tests for recurrence logic.
+- **Security (demo)**: No real secrets; warn users that JSON Server has no auth/ACL.
+- **Accessibility**: Keyboard-navigable controls, proper labels/aria, contrast AA.
+- **Mobile**: Responsive layouts; table collapses into card list ≤ 640px.
+
+---
+
+## 7. Data Model (JSON Server db.json)
+
+### 7.1 Users
+
+```json
+{
+  "id": "u_1",
+  "username": "rep1",
+  "password": "rep1", 
+  "name": "Sales Rep One"
+}
+```
+
+### 7.2 Leads
+
+```json
+{
+  "id": "lead_1",
+  "orgName": "Grace Intl",
+  "websiteUrl": "https://graceintlgroup.in",
+  "phoneUrl": "tel:+911234567890",
+  "phoneNumber": "+91-1234567890",
+  "notes": "First contact via website form.",
+  "status": "OPEN",
+  "assignedToUserId": "u_1",
+  "timezone": "Asia/Kolkata",
+  "callDays": ["MO", "WE", "FR"],
+  "callTimeLocal": "18:30",
+  "remindBeforeMin": 10,
+  "next_due_at": "2025-08-16T13:00:00.000Z",
+  "last_reminded_at": null,
+  "createdAt": "2025-08-10T10:00:00.000Z",
+  "updatedAt": "2025-08-16T10:00:00.000Z"
+}
+```
+
+---
+
+## 8. API (JSON Server routes)
+
+**Base**: `http://localhost:4000`
+
+- **Auth (demo)**: `GET /users?username={name}&password={pw}` → array[0] or 404 if empty.
+- **Leads CRUD**:
+  - `GET /leads?_sort=next_due_at&_order=asc&q=...&status=OPEN`
+  - `GET /leads/{id}`
+  - `POST /leads`
+  - `PATCH /leads/{id}`
+  - `DELETE /leads/{id}`
+  - **Due today (client filter)**: fetch recent leads then filter in client by `next_due_at <= now`.
+  - **Search**: `q` matches basic fields (`orgName`, `notes`).
+
+`routes.json` example: `{ "/api/*": "/$1" }` so the app can call `/api/leads`.
+
+---
+
+## 9. UX / Screens
+
+### 9.1 Login
+- Minimal form; on success store session; redirect to `/dashboard`.
+
+### 9.2 Dashboard
+- Top KPIs; "Whom to Call" table (due/past-due). Actions per row: Call, Snooze, Mark Called, Edit.
+- Toasts for success/failure; sticky header with filters.
+
+### 9.3 Leads List `/leads`
+- Search, status filters, timezone filter, sort by Next Due/Updated.
+- Bulk select → delete or status change.
+
+### 9.4 Lead Create/Edit
+- Form sections: Contact, Scheduling, Notes.
+- Day chips (MO..SU), time picker (HH:mm), timezone select (auto default).
+- Markdown editor with live preview.
+
+### 9.5 Bulk Import
+- Upload CSV → column mapper (`orgName`, `websiteUrl`, `phoneNumber`, `notes`, `timezone`, `callDays`, `callTimeLocal`, `status`, `assignee`).
+- Preview table with validation errors highlighted; commit writes multiple POST.
+
+### 9.6 Success Dashboard (extended)
+- Simple charts: Calls attempted per day; Closures per day; Status breakdown.
+
+---
+
+## 10. Acceptance Criteria
+
+### A1 – Create Lead
+Given valid form data, when I click Save, then a new lead is created, `next_due_at` is computed, and I see a success toast and the record in the list.
+
+### A2 – Whom to Call
+Given I have OPEN/FOLLOW_UP leads with `next_due_at <= now`, they appear on the dashboard sorted ascending by due time.
+
+### A3 – Snooze
+When I Snooze 30 min, `next_due_at` becomes `now + 30 min` (converted to UTC), the item disappears from the due list, and reappears at the right time.
+
+### A4 – Bulk Import
+Given a valid CSV, mapping produces a preview; committing creates multiple leads and computes `next_due_at` for each.
+
+### A5 – Notes
+Markdown renders correctly in preview; saving persists plain text.
+
+### A6 – Delete Single Row
+Delete prompts confirmation; upon confirm, the lead is removed and list updates without page reload.
+
+### A7 – Basic Notifications
+With permission granted, when a new item becomes due while I’m on the dashboard, a browser notification is shown.
+
+---
+
+## 11. Analytics & Events (client-side)
+
+- `auth_login_success { userId }`
+- `lead_create { id, status }`
+- `lead_update { id, changedFields }`
+- `lead_delete { id }`
+- `lead_snooze { id, minutes }`
+- `lead_called { id, outcome }`
+- `csv_import_started|committed { count }`
+- `notification_shown { id }`
+
+---
+
+## 12. Tech Stack & Dependencies
+
+- Next.js 14, TypeScript, Tailwind, shadcn/ui, lucide-react
+- React Query, axios, react-hook-form, zod
+- luxon, rrule (recurrence/time)
+- Papa Parse (CSV), react-markdown
+- JSON Server (+ concurrently) for local API
+- Optional charts with Recharts
+
+---
+
+## 13. Architecture Notes
+
+- All writes go through an API layer with types; React Query cache invalidation per mutation.
+- Recurrence computation is client-side; all schedule changes immediately recompute `next_due_at`.
+- Polling on dashboard (`refetchInterval: 60000`) drives notifications.
+- Document limitations of JSON Server (no auth, no cron, no transactions).
+
+---
+
+## 14. Testing Plan
+
+- **Unit tests**: `computeNextDueAtUTC` (today past time, multi-day selection, DST transitions, timezone changes).
+- **Integration tests**: form validation, CRUD happy paths, snooze logic.
+- **E2E (optional)**: Cypress flows for Login → Create Lead → Due List → Snooze.
+
+---
+
+## 15. Rollout Plan / Milestones
+
+- **M0 (1–2 days)**: Scaffold Next.js, Tailwind, shadcn/ui; JSON Server with seed data; routes wiring.
+- **M1 (2–4 days)**: Leads CRUD + validation + notes; Whom to Call view; recurrence function.
+- **M2 (2–3 days)**: Bulk CSV import + preview; snooze; dashboard KPIs.
+- **M3 (1–2 days)**: Notifications, charts, polish, tests, README.
+
+---
+
+## 16. Risks & Mitigations
+
+- **Browser closed = no reminders**: Make limitation explicit; suggest keeping dashboard pinned. Future: move to server cron (Node/Cloud) or FCM.
+- **JSON Server security**: Demo only; avoid real PII; no real secrets. Future: move to real DB + auth.
+- **Timezones/DST bugs**: Rely on luxon + rrule; ship tests; display both local & exact UTC times in UI.
+
+---
+
+## 17. Future Extensions (Nice-to-Have)
+
+- Real auth (NextAuth), roles/permissions, multi-tenant teams.
+- Server cron + push notifications via FCM/Email/SMS.
+- Kanban pipeline, tags, attachments, custom fields.
+- Call outcomes + reason codes; follow-up templates.
+- Import from Google Sheets; export CSV.
+
+---
+
+## 18. Open Questions
+
+1. Should Mark Called advance to the next rule occurrence or mark as FOLLOW_UP with a manual date?
+2. Do we need assignment to specific reps in v1, or just a single user?
+3. What KPIs matter most for the Success Dashboard (conversion rate, attempts per day)?
+4. Any compliance constraints on storing phone numbers?
+
+---
+
+## 19. Definition of Done (DoD)
+
+- All Acceptance Criteria pass.
+- README documents setup, limitations, and seed credentials.
+- Unit tests for recurrence cover edge cases; CI runs locally.
+- Stakeholder walkthrough recorded with screenshots of each flow.

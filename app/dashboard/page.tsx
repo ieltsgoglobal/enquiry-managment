@@ -11,16 +11,21 @@ import { DateTimeModal } from './_components/DateTimeModal';
 import { NotesModal } from './_components/NotesModal';
 import { FollowUpDateModal } from './_components/FollowUpDateModal';
 import { LastContactedModal } from './_components/LastContactedModal';
+import { User } from '@/types/db/users';
+import { fetchUsers } from './lib/fetchUsers';
+import { AssignToModal } from './_components/AssignToModal';
 
 export default async function DashboardPage() {
     let leads: Lead[] = [];
+    let users: User[] = [];
     let error = '';
 
     try {
-        leads = await fetchLeads();
+        [leads, users] = await Promise.all([fetchLeads(), fetchUsers()]);
     } catch (err: any) {
         error = err.message;
     }
+
 
     return (
         <div className="p-6">
@@ -73,7 +78,9 @@ export default async function DashboardPage() {
                                     <TableCell>
                                         <LastContactedModal id={lead.id} initialDate={lead.lastContactedAt} />
                                     </TableCell>
-                                    <TableCell>{lead.assignedTo || 'N/A'}</TableCell>
+                                    <TableCell>
+                                        <AssignToModal id={lead.id} assignedTo={lead.assignedTo} users={users} />
+                                    </TableCell>
                                     <TableCell>
                                         <DateTimeModal label="Created At" isoString={lead.createdAt} />
                                     </TableCell>

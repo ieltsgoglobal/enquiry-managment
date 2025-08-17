@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LeadWithFirebaseId, LeadStatus } from "@/types/db/lead";
 import { StatusFilter } from "./StatusFilter";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,6 +12,8 @@ import { LastContactedModal } from "./LastContactedModal";
 import { AssignToModal } from "./AssignToModal";
 import { DateTimeModal } from "./DateTimeModal";
 import { filterLeadsByStatus } from "../utils/lead-filter";
+import { getCurrentUser } from "../utils/get-current-user";
+import { useRouter } from "next/navigation";
 
 interface Props {
     leads: LeadWithFirebaseId[];
@@ -21,6 +23,15 @@ interface Props {
 export function LeadsWithFilter({ leads, users }: Props) {
     const [status, setStatus] = useState<LeadStatus | "all">("all");
     const filtered = filterLeadsByStatus(leads, status);
+    const router = useRouter()
+
+    // 🚨 check login on mount
+    useEffect(() => {
+        const user = getCurrentUser();
+        if (!user) {
+            router.push("/login");
+        }
+    }, [router]);
 
     return (
         <div>
@@ -53,7 +64,7 @@ export function LeadsWithFilter({ leads, users }: Props) {
                                 <PhoneNumbersModal phoneNumbers={lead.phoneNumbers} />
                             </TableCell>
                             <TableCell>
-                                <NotesModal initialNotes={lead.notes} id={lead.firebaseId} />
+                                <NotesModal id={lead.firebaseId} notes={lead.notes} />
                             </TableCell>
                             <TableCell>
                                 <FollowUpDateModal id={lead.firebaseId} initialDate={lead.followUpDate} />

@@ -18,8 +18,6 @@ export async function GET() {
       ...(lead as any),
     }));
 
-    console.log("leads", leads)
-
     return NextResponse.json({ success: true, leads });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'An error occurred while fetching leads' }, { status: 500 });

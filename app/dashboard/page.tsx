@@ -1,8 +1,8 @@
 import { LeadWithFirebaseId } from "@/types/db/lead";
 import { LeadsWithFilter } from "./_components/LeadsWithFilter";
 import { User } from "@/types/db/users";
-import { fetchLeads } from "./lib/fetchLeads";
-import { fetchUsers } from "./lib/fetchUsers";
+import { fetchLeads } from "../../lib/db/fetch/leads";
+import { fetchUsers } from "../../lib/db/fetch/users";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

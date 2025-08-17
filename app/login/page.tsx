@@ -7,34 +7,45 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BackgroundWrapper from '@/components/BackgroundWrapper';
 import { Label } from "@/components/ui/label";
+import { fetchUsers } from '@/lib/db/fetch/users';
 
 export default function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const router = useRouter()
+    const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+
         try {
-            const response = await fetch('/api/auth', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password }),
-            });
+            // fetch all users
+            const users = await fetchUsers();
 
-            const data = await response.json();
+            // find matching user
+            const foundUser = users.find(
+                (u) => u.username === username && u.password === password
+            );
 
-            if (data.success) {
-                localStorage.setItem('sessionToken', JSON.stringify(data.user));
-                router.push('/dashboard');
-            } else {
-                setError(data.message || 'Invalid username or password');
+            if (!foundUser) {
+                setError("Invalid username or password");
+                return;
             }
+
+            // 🟢 Store user in localStorage (with password now)
+            localStorage.setItem("sessionUser", JSON.stringify({
+                id: foundUser.id,
+                username: foundUser.username,
+                name: foundUser.name,
+            }));
+
+            // redirect
+            router.push("/dashboard");
+
         } catch (err) {
-            setError('An error occurred. Please try again.');
+            console.error("Login error:", err);
+            setError("Login failed. Please try again.");
         }
     };
 

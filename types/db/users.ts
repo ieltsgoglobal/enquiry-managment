@@ -6,3 +6,7 @@ export interface User {
     password: string;
     name: string;
 }
+
+
+// 🟢 SessionUser is User without password
+export type SessionUser = Omit<User, "password">;

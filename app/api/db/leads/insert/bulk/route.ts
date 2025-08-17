@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { DB_URL } from "@/lib/json-server/onrender/get_db_url";
+import { DB_URL_LEADS } from "@/lib/json-server/realtime/get_db_url";
 
-const LEADS_API_URL = `${DB_URL}/leads`
+const LEADS_API_URL = DB_URL_LEADS
 
 export async function POST(request: Request) {
     try {

@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { DB_URL } from "@/lib/json-server/onrender/get_db_url";
-
-const LEADS_API_URL = `${DB_URL}/leads`
+import { getLeadUrl } from "@/lib/json-server/realtime/get_db_url";
 
 export async function POST(request: Request) {
+
     try {
         const { id, notes } = await request.json();
 
@@ -11,7 +10,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: 'ID and notes are required' }, { status: 400 });
         }
 
-        const response = await fetch(`${LEADS_API_URL}/${id}`, {
+        const response = await fetch(getLeadUrl(id), {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

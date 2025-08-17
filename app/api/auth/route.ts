@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { DB_URL } from "@/lib/json-server/onrender/get_db_url";
+import { DB_URL_USERS } from "@/lib/json-server/realtime/get_db_url";
 
-const USERS_API_URL = `${DB_URL}/users`
+const USERS_API_URL = DB_URL_USERS
 
 export async function POST(request: Request) {
     try {

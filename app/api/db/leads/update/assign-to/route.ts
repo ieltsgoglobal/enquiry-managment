@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { DB_URL } from "@/lib/json-server/onrender/get_db_url";
+import { getLeadUrl } from "@/lib/json-server/realtime/get_db_url";
 
 export async function POST(req: Request) {
     try {
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         }
 
         // PATCH the lead in JSON server
-        const response = await fetch(`${DB_URL}/leads/${id}`, {
+        const response = await fetch(getLeadUrl(id), {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ assignedTo }),

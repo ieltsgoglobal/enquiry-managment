@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { DB_URL } from "@/lib/json-server/onrender/get_db_url";
+import { getLeadUrl } from "@/lib/json-server/realtime/get_db_url";
 
-const LEADS_API_URL = `${DB_URL}/leads`
 
 export async function POST(request: Request) {
     try {
@@ -22,7 +21,7 @@ export async function POST(request: Request) {
             body.followUpDate = null;
         }
 
-        const response = await fetch(`${LEADS_API_URL}/${id}`, {
+        const response = await fetch(getLeadUrl(id), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),

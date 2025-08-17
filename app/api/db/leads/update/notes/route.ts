@@ -2,12 +2,11 @@ import { NextResponse } from 'next/server';
 import { getLeadUrl } from "@/lib/json-server/realtime/get_db_url";
 
 export async function POST(request: Request) {
-
     try {
         const { id, notes } = await request.json();
 
         if (!id || !notes) {
-            return NextResponse.json({ success: false, message: 'ID and notes are required' }, { status: 400 });
+            return NextResponse.json({ success: false, message: 'firebaseKey and notes are required' }, { status: 400 });
         }
 
         const response = await fetch(getLeadUrl(id), {

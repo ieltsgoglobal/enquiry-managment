@@ -28,3 +28,7 @@ export interface Lead {
     createdAt: string;         // ISO datetime when added
     updatedAt: string;         // ISO datetime last updated
 }
+
+export interface LeadWithFirebaseId extends Lead {
+    firebaseId: string;   // always present once fetched
+}

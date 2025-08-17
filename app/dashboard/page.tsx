@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lead } from '@/types/db/lead';
+import { LeadWithFirebaseId } from '@/types/db/lead';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { fetchLeads } from './lib/fetchLeads';
@@ -14,9 +14,10 @@ import { LastContactedModal } from './_components/LastContactedModal';
 import { User } from '@/types/db/users';
 import { fetchUsers } from './lib/fetchUsers';
 import { AssignToModal } from './_components/AssignToModal';
+import { StatusModal } from './_components/StatusModal';
 
 export default async function DashboardPage() {
-    let leads: Lead[] = [];
+    let leads: LeadWithFirebaseId[] = [];
     let users: User[] = [];
     let error = '';
 
@@ -62,24 +63,22 @@ export default async function DashboardPage() {
                                 <TableRow key={lead.id}>
                                     <TableCell>{lead.orgName}</TableCell>
                                     <TableCell>
-                                        <Badge variant={getStatusBadgeVariant(lead.status)}>
-                                            {formatStatus(lead.status)}
-                                        </Badge>
+                                        <StatusModal id={lead.firebaseId} initialStatus={lead.status} />
                                     </TableCell>
                                     <TableCell>
                                         <PhoneNumbersModal phoneNumbers={lead.phoneNumbers} />
                                     </TableCell>
                                     <TableCell>
-                                        <NotesModal initialNotes={lead.notes} id={lead.id} />
+                                        <NotesModal initialNotes={lead.notes} id={lead.firebaseId} />
                                     </TableCell>
                                     <TableCell>
-                                        <FollowUpDateModal id={lead.id} initialDate={lead.followUpDate} />
+                                        <FollowUpDateModal id={lead.firebaseId} initialDate={lead.followUpDate} />
                                     </TableCell>
                                     <TableCell>
-                                        <LastContactedModal id={lead.id} initialDate={lead.lastContactedAt} />
+                                        <LastContactedModal id={lead.firebaseId} initialDate={lead.lastContactedAt} />
                                     </TableCell>
                                     <TableCell>
-                                        <AssignToModal id={lead.id} assignedTo={lead.assignedTo} users={users} />
+                                        <AssignToModal id={lead.firebaseId} assignedTo={lead.assignedTo} users={users} />
                                     </TableCell>
                                     <TableCell>
                                         <DateTimeModal label="Created At" isoString={lead.createdAt} />

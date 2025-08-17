@@ -1,7 +1,7 @@
 import { getBaseUrl } from '@/lib/api-base';
-import { Lead } from '@/types/db/lead';
+import { LeadWithFirebaseId } from '@/types/db/lead';
 
-export async function fetchLeads(): Promise<Lead[]> {
+export async function fetchLeads(): Promise<LeadWithFirebaseId[]> {
     const baseUrl = getBaseUrl();
 
     const response = await fetch(`${baseUrl}/api/db/leads/fetch`, {

@@ -13,10 +13,12 @@ export async function GET() {
     }
 
     // 🔑 Normalize Firebase object -> array
-    const leads = Object.entries(data).map(([id, lead]) => ({
-      id, // Firebase push key
+    const leads = Object.entries(data).map(([firebaseId, lead]) => ({
+      firebaseId, // Firebase push key
       ...(lead as any),
     }));
+
+    console.log("leads", leads)
 
     return NextResponse.json({ success: true, leads });
   } catch (error) {

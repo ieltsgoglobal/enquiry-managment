@@ -29,7 +29,7 @@ export interface Lead {
     phoneUrl?: string;         // Click-to-call link (optional)
     phoneNumbers?: string[];      // Plain phone number
 
-    notes: LeadNoteHistory[];   // ✅ replace both fields with this single array
+    notes?: LeadNoteHistory[];   // ✅ replace both fields with this single array
 
     status: LeadStatus;        // Current status
     followUpDate?: string;     // ISO date for follow-up reminder

@@ -20,7 +20,7 @@ import { fetchUsers } from "@/lib/db/fetch/users"
 
 interface NotesModalProps {
     id: string
-    notes: LeadNoteHistory[]
+    notes?: LeadNoteHistory[]
 }
 
 export function NotesModal({ id, notes = [] }: NotesModalProps) {

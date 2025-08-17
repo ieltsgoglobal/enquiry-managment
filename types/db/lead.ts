@@ -13,6 +13,14 @@ export enum LeadStatus {
     New = "new",
 }
 
+// 🟢 Note history structure
+export interface LeadNoteHistory {
+    id: string;        // unique ID for this note change
+    authorId: string;  // user who made the change
+    note: string;      // note text (markdown/plain)
+    createdAt: string; // ISO datetime
+}
+
 // Lead structure
 export interface Lead {
     id: string;                // uuid ID
@@ -20,7 +28,11 @@ export interface Lead {
     websiteUrl?: string;       // Website URL (optional)
     phoneUrl?: string;         // Click-to-call link (optional)
     phoneNumbers?: string[];      // Plain phone number
-    notes?: string;            // Notes (MDX/Markdown)
+
+    // Instead of single string, keep both:
+    notes?: string;                      // latest note (optional quick access)
+    notesHistory?: LeadNoteHistory[];    // full history
+
     status: LeadStatus;        // Current status
     followUpDate?: string;     // ISO date for follow-up reminder
     lastContactedAt?: string;   // ISO datetime of last contact

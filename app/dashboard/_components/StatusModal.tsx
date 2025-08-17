@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { LeadStatus } from "@/types/db/lead";
 import { Badge } from "@/components/ui/badge";
 import { formatStatus, getStatusBadgeVariant } from "@/app/dashboard/utils/dashboard-helper";
+import { useRouter } from "next/navigation";
 
 interface StatusModalProps {
     id: string;
@@ -16,6 +17,7 @@ export function StatusModal({ id, initialStatus }: StatusModalProps) {
     const [status, setStatus] = useState<LeadStatus>(initialStatus);
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
+    const router = useRouter();
 
     const handleSave = async () => {
         setLoading(true);
@@ -27,7 +29,9 @@ export function StatusModal({ id, initialStatus }: StatusModalProps) {
             });
 
             if (res.ok) {
-                setOpen(false); // ✅ close after success
+                setOpen(false);
+                console.log("Status saved successfully")
+                router.refresh();
             }
         } catch (err) {
             console.error("Failed to update status", err);

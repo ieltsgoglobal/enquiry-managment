@@ -1,34 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LeadStatus, LeadWithFirebaseId } from '@/types/db/lead';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { fetchLeads } from './lib/fetchLeads';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PhoneNumbersModal } from './_components/PhoneNumbersModal';
-import { DateTimeModal } from './_components/DateTimeModal';
-import { NotesModal } from './_components/NotesModal';
-import { FollowUpDateModal } from './_components/FollowUpDateModal';
-import { LastContactedModal } from './_components/LastContactedModal';
-import { User } from '@/types/db/users';
-import { fetchUsers } from './lib/fetchUsers';
-import { AssignToModal } from './_components/AssignToModal';
-import { StatusModal } from './_components/StatusModal';
-import { filterLeadsByStatus } from './utils/lead-filter';
+import { LeadWithFirebaseId } from "@/types/db/lead";
+import { LeadsWithFilter } from "./_components/LeadsWithFilter";
+import { User } from "@/types/db/users";
+import { fetchLeads } from "./lib/fetchLeads";
+import { fetchUsers } from "./lib/fetchUsers";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
     let leads: LeadWithFirebaseId[] = [];
     let users: User[] = [];
-    let error = '';
+    let error = "";
 
     try {
         [leads, users] = await Promise.all([fetchLeads(), fetchUsers()]);
     } catch (err: any) {
         error = err.message;
     }
-
-    // Example: show only "hot_lead"
-    const filteredLeads = filterLeadsByStatus(leads, LeadStatus.New);
-
 
     return (
         <div className="p-6">
@@ -45,53 +33,11 @@ export default async function DashboardPage() {
                             <Button>Add Bulk Leads</Button>
                         </Link>
                     </div>
+
                     {error && <p className="text-red-500">{error}</p>}
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Organization</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Phone Numbers</TableHead>
-                                <TableHead>Notes</TableHead>
-                                <TableHead>Follow-Up Date</TableHead>
-                                <TableHead>Last Contacted</TableHead>
-                                <TableHead>Assigned To</TableHead>
-                                <TableHead>Created At</TableHead>
-                                <TableHead>Updated At</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredLeads.map((lead) => (
-                                <TableRow key={lead.id}>
-                                    <TableCell>{lead.orgName}</TableCell>
-                                    <TableCell>
-                                        <StatusModal id={lead.firebaseId} initialStatus={lead.status} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <PhoneNumbersModal phoneNumbers={lead.phoneNumbers} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <NotesModal initialNotes={lead.notes} id={lead.firebaseId} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <FollowUpDateModal id={lead.firebaseId} initialDate={lead.followUpDate} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <LastContactedModal id={lead.firebaseId} initialDate={lead.lastContactedAt} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <AssignToModal id={lead.firebaseId} assignedTo={lead.assignedTo} users={users} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <DateTimeModal label="Created At" isoString={lead.createdAt} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <DateTimeModal label="Updated At" isoString={lead.updatedAt} />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+
+                    {/* ✅ All filtering + table in one place */}
+                    <LeadsWithFilter leads={leads} users={users} />
                 </CardContent>
             </Card>
         </div>

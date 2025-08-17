@@ -6,7 +6,7 @@ export async function fetchUsers(): Promise<User[]> {
     const baseUrl = getBaseUrl();
 
     const response = await fetch(`${baseUrl}/api/db/users/fetch`, {
-        cache: 'no-store',
+        cache: "force-cache",
     });
     const data = await response.json();
 

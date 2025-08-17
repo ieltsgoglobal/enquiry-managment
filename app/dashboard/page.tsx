@@ -1,11 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LeadWithFirebaseId } from '@/types/db/lead';
+import { LeadStatus, LeadWithFirebaseId } from '@/types/db/lead';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { fetchLeads } from './lib/fetchLeads';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatStatus, getStatusBadgeVariant } from './utils/dashboard-helper';
-import { Badge } from '@/components/ui/badge';
 import { PhoneNumbersModal } from './_components/PhoneNumbersModal';
 import { DateTimeModal } from './_components/DateTimeModal';
 import { NotesModal } from './_components/NotesModal';
@@ -15,6 +13,7 @@ import { User } from '@/types/db/users';
 import { fetchUsers } from './lib/fetchUsers';
 import { AssignToModal } from './_components/AssignToModal';
 import { StatusModal } from './_components/StatusModal';
+import { filterLeadsByStatus } from './utils/lead-filter';
 
 export default async function DashboardPage() {
     let leads: LeadWithFirebaseId[] = [];
@@ -26,6 +25,9 @@ export default async function DashboardPage() {
     } catch (err: any) {
         error = err.message;
     }
+
+    // Example: show only "hot_lead"
+    const filteredLeads = filterLeadsByStatus(leads, LeadStatus.New);
 
 
     return (
@@ -59,7 +61,7 @@ export default async function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {leads.map((lead) => (
+                            {filteredLeads.map((lead) => (
                                 <TableRow key={lead.id}>
                                     <TableCell>{lead.orgName}</TableCell>
                                     <TableCell>

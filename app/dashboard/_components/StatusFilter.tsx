@@ -41,7 +41,7 @@ export function StatusFilter({ onChange }: StatusFilterProps) {
                         )}
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
+                <DropdownMenuContent className="w-64 ml-3">
                     <DropdownMenuItem onClick={() => handleSelect("all")}>
                         All Leads
                     </DropdownMenuItem>

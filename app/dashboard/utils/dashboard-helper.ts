@@ -31,8 +31,9 @@ export function getStatusBadgeVariant(status: LeadStatus): BadgeVariant {
             return "success"
         case LeadStatus.HotLead:
         case LeadStatus.Prospective:
+            return "yellow"
         case LeadStatus.New:
-            return "secondary"
+            return "blue"
         case LeadStatus.NotInterested:
         case LeadStatus.Dead:
         case LeadStatus.WrongNumber:

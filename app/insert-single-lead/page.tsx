@@ -12,8 +12,12 @@ export default function AddLeadPage() {
   const [status, setStatus] = useState(LeadStatus.New);
   const [error, setError] = useState('');
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleAddLead = async () => {
+    setLoading(true);
+    setError("");
+
     const newLead: Lead = {
       id: crypto.randomUUID(),
       orgName,
@@ -41,6 +45,8 @@ export default function AddLeadPage() {
       }
     } catch (err) {
       setError('An error occurred while adding the lead');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,7 +97,7 @@ export default function AddLeadPage() {
           ))}
         </select>
       </div>
-      <Button onClick={handleAddLead} className="w-full">
+      <Button onClick={handleAddLead} disabled={loading} className="w-full">
         Add Lead
       </Button>
     </div>
